@@ -1,5 +1,5 @@
 from langchain_core.prompts import PromptTemplate
-from llm.qwen3_8b import llm
+from llm.deepseek import llm
 
 # 使用from_template方法创建提示词模板
 prompt = PromptTemplate.from_template("What is the capital of {country}?")
