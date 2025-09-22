@@ -1,0 +1,10 @@
+/_pycache_/
+/code/__pycache__/
+/code/langchain_demo/__pycache__/
+/code/langchain_demo/llm/__pycache__/
+/code/langchain_demo/llm/deepseek/__pycache__/
+/code/langchain_demo/llm/qwen3_8b/__pycache__/
+/code/langchain_demo/promptTemplate/__pycache__/
+/code/langchain_demo/promptTemplate_chat/__pycache__/
+/code/langchain_demo/promptTemplate_chat_ICL/__pycache__/
+/code/langchain_demo/promptTemplate_ICL/__pycache__/
