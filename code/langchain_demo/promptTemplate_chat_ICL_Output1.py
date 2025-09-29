@@ -1,5 +1,6 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts import MessagesPlaceholder, FewShotChatMessagePromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 from llm.deepseek import llm
 
 example = [
@@ -31,5 +32,8 @@ final_prompt = ChatPromptTemplate.from_messages([
     MessagesPlaceholder("msgs")
 ])
 
-chain = final_prompt | llm
+# chain = final_prompt | llm
+
+# 加入输出解析器
+chain = final_prompt | llm | StrOutputParser() # 将大模型的输出解析为字符串
 print(chain.invoke({"msgs":[("user", "5😭7")]}))
