@@ -2,7 +2,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableWithMessageHistory
 from llm.qwen3_8b import llm
 from langchain_community.chat_message_histories.sql import SQLChatMessageHistory
-
+from langchain_core.runnables import RunnablePassthrough
 
 # 1、提示词模版
 prompt = ChatPromptTemplate.from_messages([
@@ -70,6 +70,7 @@ def sumarize_message(current_input):
     ])
     
     summary_chain = summary_prompt | llm
+    # AIMessage
     summary_message = summary_chain.invoke({"chat_history": summarized_messages})
 
     # 重建历史聊天记录：清空、添加摘要、添加最后两条消息
@@ -80,15 +81,13 @@ def sumarize_message(current_input):
     
     return True
     
+# 6、创建最终的链
+# RunnablePassthrough 默认会将输入数据原样传递到下游，而.assign()方法允许在保留原始输入的同时
+# 通过键值队对（如：messages_sumarized=sumarize_message）向输入字典中添加新字段
+final_chain = RunnablePassthrough.assign(messages_sumarized=sumarize_message) | chain_with_message_history
 
-
-
-
-
-    
-
-result1 = chain_with_message_history.invoke({"input":"你好，我是小明，请介绍一下你自己"},config={"configurable": {"session_id": "user_1"}})
+result1 = final_chain.invoke({"input":"你好，我是小明，请介绍一下你自己","config":{"configurable": {"session_id": "user_1"}}},config={"configurable": {"session_id": "user_1"}})
 print(result1)
 
-result2 = chain_with_message_history.invoke({"input":"我的名字叫什么"},config={"configurable": {"session_id": "user_1"}})
+result2 = final_chain.invoke({"input":"我的名字叫什么","config":{"configurable": {"session_id": "user_1"}}},config={"configurable": {"session_id": "user_1"}})
 print(result2)
