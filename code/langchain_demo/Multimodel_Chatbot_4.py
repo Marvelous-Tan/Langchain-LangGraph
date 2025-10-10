@@ -6,9 +6,9 @@ from langchain_core.runnables import RunnablePassthrough
 
 # 1、提示词模版
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "你是一个智能助手，尽可能的调用工具回答用户的问题"),
-    MessagesPlaceholder(variable_name="chat_history",optional=True), 
+    ("system", "{system_message}"),
     # MessagesPlaceholder 就是 在提示词（prompt）里留一个“插槽”，这个插槽不是放一段字符串，而是放一整段“聊天记录”或者“模型自己的小笔记”
+    MessagesPlaceholder(variable_name="chat_history",optional=True), 
     ("human", "{input}"),
     #MessagesPlaceholder(variable_name="agent_scratchpad",optional=True), # 一般agent开发才会使用到
 ])
@@ -56,7 +56,7 @@ def sumarize_message(current_input):
     # 获取messages列表
     stored_messages = chat_history.get_messages()
     if len(stored_messages) <= 2:
-        return False
+        return {"original_message":stored_messages, "summary":None} # 不满足条件时直接返回最近原始消息即可
     
     # 剪辑消息列表
     clipped_messages = stored_messages[-2:]
@@ -75,20 +75,33 @@ def sumarize_message(current_input):
 
     # 重建历史聊天记录：清空、添加摘要、添加最后两条消息
     # 但是这样会有一个问题，这样会导致历史记录中永远只有5条信息，但我们只是对过往历史纪录进行摘要而不是将其完全删除，所以该逻辑有bug不可使用
-    chat_history = chat_history.clear()
-    chat_history.add_message(summary_message)
-    for message in clipped_messages:
-        chat_history.add_message(message)
+    # chat_history = chat_history.clear()
+    # chat_history.add_message(summary_message)
+    # for message in clipped_messages:
+    #     chat_history.add_message(message)
     
-    return True
+    # return True
+
+    return{
+        "original_message":clipped_messages,
+        "summary":summary_message
+    }
     
 # 6、创建最终的链
 # RunnablePassthrough 默认会将输入数据原样传递到下游，而.assign()方法允许在保留原始输入的同时
-# 通过键值队对（如：messages_sumarized=sumarize_message）向输入字典中添加新字段
-final_chain = RunnablePassthrough.assign(messages_sumarized=sumarize_message) | chain_with_message_history
+# 通过键值队被函数赋值（如：messages_sumarized=sumarize_message）向输入字典中添加新字段
+# messages_sumarized是一个字典，包含original_message和summary
+final_chain = RunnablePassthrough.assign(messages_sumarized=sumarize_message) | RunnablePassthrough.assign(
+    input = lambda x: x['input'],
+    chat_history = lambda x: x['messages_sumarized']['original_message'],
+    system_message = lambda x: f"你是一个乐于助人的助手。尽你所能回答所有问题。摘要：{x['messages_sumarized']['summary']['content']}" if x['messages_sumarized'].get('summary') else "无摘要"
+)|chain_with_message_history
 
 result1 = final_chain.invoke({"input":"你好，我是小明，请介绍一下你自己","config":{"configurable": {"session_id": "user_1"}}},config={"configurable": {"session_id": "user_1"}})
 print(result1)
 
 result2 = final_chain.invoke({"input":"我的名字叫什么","config":{"configurable": {"session_id": "user_1"}}},config={"configurable": {"session_id": "user_1"}})
+print(result2)
+
+result2 = final_chain.invoke({"input":"历史上和我同名的人有哪些","config":{"configurable": {"session_id": "user_1"}}},config={"configurable": {"session_id": "user_1"}})
 print(result2)
