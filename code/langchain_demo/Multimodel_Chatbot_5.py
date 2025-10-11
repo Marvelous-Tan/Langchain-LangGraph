@@ -1,8 +1,10 @@
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableWithMessageHistory
+from sqlalchemy.sql.functions import user
 from llm.qwen3_8b import llm
 from langchain_community.chat_message_histories.sql import SQLChatMessageHistory
 from langchain_core.runnables import RunnablePassthrough
+import gradio as gr
 
 # 1、提示词模版
 prompt = ChatPromptTemplate.from_messages([
@@ -97,11 +99,55 @@ final_chain = RunnablePassthrough.assign(messages_sumarized=sumarize_message) | 
     system_message = lambda x: f"你是一个乐于助人的助手。尽你所能回答所有问题。摘要：{x['messages_sumarized']['summary'].content}" if x['messages_sumarized'].get('summary') else "无摘要"
 )|chain_with_message_history
 
-result1 = final_chain.invoke({"input":"你好，我是小明，请介绍一下你自己","config":{"configurable": {"session_id": "user_1"}}},config={"configurable": {"session_id": "user_1"}})
-print(result1)
+# result1 = final_chain.invoke({"input":"你好，我是小明，请介绍一下你自己","config":{"configurable": {"session_id": "user_1"}}},config={"configurable": {"session_id": "user_1"}})
+# print(result1)
 
-result2 = final_chain.invoke({"input":"我的名字叫什么","config":{"configurable": {"session_id": "user_1"}}},config={"configurable": {"session_id": "user_1"}})
-print(result2)
+# result2 = final_chain.invoke({"input":"我的名字叫什么","config":{"configurable": {"session_id": "user_1"}}},config={"configurable": {"session_id": "user_1"}})
+# print(result2)
 
-result2 = final_chain.invoke({"input":"历史上和我同名的人有哪些","config":{"configurable": {"session_id": "user_1"}}},config={"configurable": {"session_id": "user_1"}})
-print(result2)
+# result2 = final_chain.invoke({"input":"历史上和我同名的人有哪些","config":{"configurable": {"session_id": "user_1"}}},config={"configurable": {"session_id": "user_1"}})
+# print(result2)
+
+
+
+# web界面中的核心函数
+def add_message(chat_history,user_message):
+    if user_message:
+        chat_history.append({'role':'user','content':user_message})
+    return chat_history,''
+
+# 调用链，使用大模型
+def execute_chain(chat_history):
+    input = chat_history[-1]['content']
+    result = final_chain.invoke({"input":input,"config":{"configurable": {"session_id": "user_1"}}},config={"configurable": {"session_id": "user_1"}})
+    chat_history.append({'role':'assistant','content':result.content})
+    return chat_history
+
+# 开发一个聊天机器人的Web界面
+with gr.Blocks(title='多模态聊天机器人', theme="gradio/soft") as block:
+    # 聊天历史记录的组件
+    chatbot = gr.Chatbot(type = 'messages',height=500,label='聊天机器人')
+
+    with gr.Row():
+        # 文字输入区域
+        with gr.Column(scale=4):
+
+            # 文本输入框
+            user_input = gr.Textbox(label='文字输入',placeholder='请输入你的问题',max_lines=10)
+
+            # 提交按钮
+            submit_button = gr.Button(value = '提交',variant='primary')
+
+        with gr.Column(scale=1):
+
+            # 录制音频
+            audio_input = gr.Audio(sources=['microphone'],label='语音输入',type='filepath',format='mp3')
+            submit_button = gr.Button(value = '提交',variant='primary')
+
+    chat_msg = user_input.submit(add_message,inputs=[chatbot,user_input],outputs=[chatbot,user_input])
+    
+    # .then()表示执行完submit之后，再执行下一个函数
+    chat_msg.then(execute_chain,inputs=[chatbot],outputs=[chatbot])
+
+if __name__ == "__main__":
+    block.launch()
