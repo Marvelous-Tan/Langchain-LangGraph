@@ -1,12 +1,13 @@
+import whisper
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableWithMessageHistory
 from sqlalchemy.sql.functions import user
-from llm.qwen3_8b import llm
+from llm.claude_4 import llm
 from langchain_community.chat_message_histories.sql import SQLChatMessageHistory
 from langchain_core.runnables import RunnablePassthrough
 import gradio as gr
 from zhipuai import ZhipuAI
-import whisper
+
 
 # 1、提示词模版
 prompt = ChatPromptTemplate.from_messages([
@@ -173,7 +174,7 @@ with gr.Blocks(title='多模态聊天机器人', theme="gradio/soft") as block:
     audio_input.change(read_audio,inputs=[audio_input],outputs=[user_input])
 
     # 按钮点击事件
-    submit_button.click(add_message,inputs=[chatbot,user_input],outputs=[chatbot,user_input].then(execute_chain,inputs=[chatbot],outputs=[chatbot]))
+    submit_button.click(add_message,inputs=[chatbot,user_input],outputs=[chatbot,user_input]).then(execute_chain,inputs=[chatbot],outputs=[chatbot])
 
 if __name__ == "__main__":
     block.launch()

@@ -1,6 +1,6 @@
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableWithMessageHistory
-from llm.qwen3_8b import llm
+from llm.claude_4 import llm
 from langchain_community.chat_message_histories.sql import SQLChatMessageHistory
 from langchain_core.runnables import RunnablePassthrough
 

@@ -1,7 +1,6 @@
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
-from env_utils import LOCAL_BASE_URL
+from code.env_utils import LOCAL_BASE_URL
 from langchain_openai import ChatOpenAI
 
 llm = ChatOpenAI(
