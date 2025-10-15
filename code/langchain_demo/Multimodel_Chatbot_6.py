@@ -5,6 +5,8 @@ from llm.qwen3_8b import llm
 from langchain_community.chat_message_histories.sql import SQLChatMessageHistory
 from langchain_core.runnables import RunnablePassthrough
 import gradio as gr
+from zhipuai import ZhipuAI
+import whisper
 
 # 1、提示词模版
 prompt = ChatPromptTemplate.from_messages([
@@ -123,9 +125,22 @@ def execute_chain(chat_history):
     chat_history.append({'role':'assistant','content':result.content})
     return chat_history
 
-def read_audio(chat_history,audio_message):
-    "读取音频文件"
+def read_audio(audio_message):
+    """读取音频文件并用 Whisper 转文字"""
     print(audio_message)
+    if audio_message:
+        # 加载 Whisper 模型（可选 tiny / base / small / medium / large）
+        model = whisper.load_model("small")
+
+        # 进行语音识别
+        result = model.transcribe(audio_message)
+
+        # 提取识别出的文本
+        text = result["text"]
+
+        # 打印结果
+        print(text)
+        return text
 
 
 # 开发一个聊天机器人的Web界面
@@ -155,8 +170,10 @@ with gr.Blocks(title='多模态聊天机器人', theme="gradio/soft") as block:
     chat_msg.then(execute_chain,inputs=[chatbot],outputs=[chatbot])
 
     # 语音输入框改变事件
-    audio_input.change(read_audio,inputs=[chatbot,audio_input],outputs=[])
+    audio_input.change(read_audio,inputs=[audio_input],outputs=[user_input])
 
+    # 按钮点击事件
+    submit_button.click(add_message,inputs=[chatbot,user_input],outputs=[chatbot,user_input].then(execute_chain,inputs=[chatbot],outputs=[chatbot]))
 
 if __name__ == "__main__":
     block.launch()
