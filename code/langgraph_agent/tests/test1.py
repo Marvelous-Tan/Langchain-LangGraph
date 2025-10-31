@@ -11,9 +11,11 @@ async def main():
         input={
         "messages": [{
             "role": "human",
-            "content": "What is LangGraph?",
+            "content": "给当前用户一个祝福语",
             }],
         },
+        # stream_mode="messages-tuple",
+        config={"configurable":{"user_name":"Marvelous"}},
     ):
         print(f"Receiving new event of type: {chunk.event}...")
         print(chunk.data)
