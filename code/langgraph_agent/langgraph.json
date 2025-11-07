@@ -2,7 +2,7 @@
   "$schema": "https://langgra.ph/schema.json",
   "dependencies": ["."],
   "graphs": {
-    "agent": "./src/agent/marvelous_agent.py:graph"
+    "agent": "./src/agent/marvelous_agent_mcp_authentication.py:agent"
   },
   "env": ".env",
   "image_distro": "wolfi"
