@@ -25,11 +25,11 @@ def prompt(state: AgentState,config:RunnableConfig)->list[AnyMessage]:
 
 # class CustomMiddleware(AgentMiddleware):
 #     state_schema = CustomState
-#     tools = [tool1, tool2]
+#     tools_node = [tool1, tool2]
 
 graph = create_agent(
     model=llm,
-    # tools=[calculate4,runnable_tool,claude_search_tool,get_user_info_by_name],
+    # tools_node=[calculate4,runnable_tool,claude_search_tool,get_user_info_by_name],
     tools=[calculate4,runnable_tool,claude_search_tool,get_user_name,greet_user],
     # system_prompt="You are a helpful assistant"
     system_prompt=str(prompt),

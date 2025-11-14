@@ -44,5 +44,5 @@ def get_config()->dict:
     return{
         "theme":"dark",         # 界面主题配置
         "version":"1.2.0",          # 当前版本号
-        "features":["tools","resources"],   # 已启用的功能模块
+        "features":["tools_node","resources"],   # 已启用的功能模块
     }

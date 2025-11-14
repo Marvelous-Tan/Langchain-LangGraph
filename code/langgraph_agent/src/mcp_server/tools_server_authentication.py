@@ -25,6 +25,9 @@ token = key_pair.create_token(
 )
 print(token)
 
+# 签发端就是包含签发配置，并且使用签发配置生成了token,生成token后，token会传给客户端
+# 然后客户端发送请求和token给服务端，服务端用对应的签发配置验证token，通过后就可以调用工具
+
 
 mcp_server = FastMCP(
     name="marvelous_mcp_server",

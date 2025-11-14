@@ -20,7 +20,7 @@ from src.llm.claude_4 import llm
 
 # class CustomMiddleware(AgentMiddleware):
 #     state_schema = CustomState
-#     tools = [tool1, tool2]
+#     tools_node = [tool1, tool2]
 
 # 初始化数据库
 DB_URI = "postgresql://postgres:tlch030206@localhost:5432/marvelous_pgsql?sslmode=disable"
@@ -32,7 +32,7 @@ with (
     store.setup()
     agent = create_agent(
         model=llm,
-        # tools=[calculate4,runnable_tool,claude_search_tool,get_user_info_by_name],
+        # tools_node=[calculate4,runnable_tool,claude_search_tool,get_user_info_by_name],
         tools=[runnable_tool,claude_search_tool],
         # system_prompt="You are a helpful assistant"
         system_prompt="你是一个智能助手，尽可能的调用工具回答用户的问题",
