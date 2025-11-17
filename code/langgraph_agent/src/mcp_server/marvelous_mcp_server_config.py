@@ -20,7 +20,7 @@ python_mcp_claude_search_server_config={
 # 12306-mcp服务
 python_mcp_12306_server_config={
       "transport": "streamable_http",
-      "url": "https://mcp.api-inference.modelscope.net/7f92f889f8c94a/mcp"
+      "url": "https://mcp.api-inference.modelscope.net/1c5fc2ebcfb74b/mcp"
 }
 
 # {
@@ -35,5 +35,5 @@ python_mcp_12306_server_config={
 # 表格制作-mcp服务
 python_mcp_table_create_server_config={
       "transport": "streamable_http",
-      "url": "https://mcp.api-inference.modelscope.net/5502466066fc4f/mcp"
+      "url": "https://mcp.api-inference.modelscope.net/8b7918bd2b4342/mcp"
 }

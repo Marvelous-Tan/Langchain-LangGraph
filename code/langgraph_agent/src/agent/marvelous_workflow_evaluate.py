@@ -81,4 +81,5 @@ def router_builder(state: State):
 # 添加条件边
 builder.add_conditional_edges('joke_evaluate', router_builder)
 
+# 构建完后必须 .compile()，将工作流编译为可执行的Runnable对象
 workflow = builder.compile()

@@ -1,8 +1,11 @@
 import asyncio
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.constants import END, START
 from langgraph.graph import MessagesState, StateGraph
+
+from code.langchain_demo.Multimodel_Chatbot_6 import user_input
 from src.mcp_server.marvelous_mcp_server_config import python_mcp_12306_server_config
 from src.mcp_server.marvelous_mcp_server_config import python_mcp_claude_search_server_config
 from src.mcp_server.marvelous_mcp_server_config import python_mcp_table_create_server_config
@@ -72,7 +75,23 @@ async def create_graph():
     builder.add_edge('tools_node', 'chatbot')
     builder.add_edge(START, 'chatbot')
 
-    graph = builder.compile()
+    memory= MemorySaver()
+    graph = builder.compile(checkpointer=memory,interrupt_before=['tools_node'])
     return graph
 
-marvelous_12306search_assistant_workflow= asyncio.run(create_graph())
+# marvelous_12306search_assistant_workflow= asyncio.run(create_graph())
+
+async def run_graph():
+    graph = await create_graph()
+    # 配置参数，包含乘客ID和线程ID
+    config = {
+        "configurable": {
+            # 检查点由 session_id 访问（就是会话id）
+            "thread_id": "marvelous_tan",
+        }
+    }
+
+    while True:
+        user_input = input('user:')
+        resp =await execute_graph(user_input)
+        print('AI:',resp)

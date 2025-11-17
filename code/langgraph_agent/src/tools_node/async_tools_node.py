@@ -71,7 +71,7 @@ class BasicToolsNode:
 
             try:
                 # 3. 异步调用工具
-                tool = self.tools_by_name.get(tool_call["name"]) # 验证工具是否在工具名集合中
+                tool = self.tools_by_name.get(tool_call["name"]) # 验证工具是否在工具集合中
                 if not tool:
                     raise KeyError(f"未注册的工具: {tool_call['name']}")
 
