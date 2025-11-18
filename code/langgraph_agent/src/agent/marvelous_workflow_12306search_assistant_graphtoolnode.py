@@ -40,7 +40,6 @@ class State(MessagesState):
 #     # 并且这个列表长度 > 0，说明模型在上一轮输出中调用了工具
 #     if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:
 #         return "tools"  # 控制流跳转到工具执行节点
-#
 #     # 如果没有工具要调用，则结束（或走到下一个非工具分支）
 #     return END
 
