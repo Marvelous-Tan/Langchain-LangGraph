@@ -5,12 +5,14 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.constants import END, START
 from langgraph.graph import MessagesState, StateGraph
+from langgraph.types import Command
+
 from src.mcp_server.marvelous_mcp_server_config import python_mcp_12306_server_config
 from src.mcp_server.marvelous_mcp_server_config import python_mcp_claude_search_server_config
 from src.mcp_server.marvelous_mcp_server_config import python_mcp_table_create_server_config
 
 from src.llm.claude_4 import llm
-from src.tools_node.async_tools_node import BasicToolsNode
+from src.tools_node.async_tools_node_interrupt import BasicToolsNode
 
 # mcp客户端
 mcp_client = MultiServerMCPClient(
@@ -75,7 +77,7 @@ async def create_graph():
     builder.add_edge(START, 'chatbot')
 
     memory= MemorySaver()
-    graph = builder.compile(checkpointer=memory,interrupt_before=['tools_node'])
+    graph = builder.compile(checkpointer=memory)
     return graph
 
 # marvelous_12306search_assistant_workflow= asyncio.run(create_graph())
@@ -112,27 +114,27 @@ async def run_graph():
 
         return result
 
-    def get_answer(tool_message, user_answer):
-        """让人工介入，并且给一个问题的答案"""
-
-        tool_name = tool_message.tool_calls[0]['name']
-        answer = (
-            f"人工强制终止了工具：{tool_name} 的执行，拒绝的理由是：{user_answer}"
-        )
-
-        # 创建一个消息
-        new_message = [
-            ToolMessage(
-                content=answer,
-                tool_call_id=tool_message.tool_calls[0]['id']
-            ),
-            AIMessage(content=answer)
-        ]
-        # 把新人为造的消息，添加到工作流的 state 中
-        graph.update_state(  # 手动修改 state
-            config=config,
-            values={"messages": new_message}
-        )
+    # def get_answer(tool_message, user_answer):
+    #     """让人工介入，并且给一个问题的答案"""
+    #
+    #     tool_name = tool_message.tool_calls[0]['name']
+    #     answer = (
+    #         f"人工强制终止了工具：{tool_name} 的执行，拒绝的理由是：{user_answer}"
+    #     )
+    #
+    #     # 创建一个消息
+    #     new_message = [
+    #         ToolMessage(
+    #             content=answer,
+    #             tool_call_id=tool_message.tool_calls[0]['id']
+    #         ),
+    #         AIMessage(content=answer)
+    #     ]
+    #     # 把新人为造的消息，添加到工作流的 state 中
+    #     graph.update_state(  # 手动修改 state
+    #         config=config,
+    #         values={"messages": new_message}
+    #     )
 
     async def execute_graph(user_input:str)->str:
         """
@@ -149,28 +151,22 @@ async def run_graph():
         """
 
         result = ""  # AI助手的最后一条消息
-        if user_input.strip().lower() !='y': # 将用户输入的字符串前后空格、换行等字符串删去，然后将字符串小写化
-            current_state= graph.get_state(config)
-            if current_state.next: # 如果有下一步，说明当前正处在中断状态中
-                tools_script_message = current_state.values['messages'][-1] # state中存储的最后一条AIMessage
-                # 通过提供关于请求的更改/改变主意的指示来满足工具调用
-                get_answer(tools_script_message, user_input)
-                message= graph.get_state(config).values['messages'][-1]
-                result = message.content
-                return result
-            else:
-                async for chunk in graph.astream({'messages':('user',user_input)},config,stream_mode='values'):
-                    result = print_message(chunk, result)
-        else: # 用户输入了'y',想继续工具的调用
-            async for chunk in graph.astream(None,config,stream_mode='values'):
-                result = print_message(chunk,result)
+        current_state= graph.get_state(config)
+        if current_state.next: # 出现了工作流的中断
+            human_command = Command(resume={'answer':user_input})
+            async for chunk in graph.astream(input=human_command,config=config,stream_mode='values'):
+                result = print_message(chunk, result)
+            return result
+        else:
+            async for chunk in graph.astream(input={'messages':('user',user_input)},config=config,stream_mode='values'):
+                result = print_message(chunk, result)
+                if chunk.get('__interrupt__',None):
+                    print(chunk['__interrupt__'])
+
 
         current_state= graph.get_state(config)
         if current_state.next: # 出现了工作流的中断
-            ai_message = current_state.values['messages'][-1]
-            tool_name =ai_message.tool_calls[0]['name']
-            # ai_message.tool_calls[0]['args']
-            result = f"AI助手马上根据你的要求，执行{tool_name}工具。你是否批准继续执行？输入'y'继续，否则请说明您额外的需求。\n"
+            result = current_state.interrupts[0].value
 
         return result
 

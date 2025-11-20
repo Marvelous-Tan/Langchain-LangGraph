@@ -1,6 +1,6 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts.chat import MessagesPlaceholder
-from llm.deepseek import llm
+from src.llm.claude_4 import llm
 
 
 # 使用chat模板
